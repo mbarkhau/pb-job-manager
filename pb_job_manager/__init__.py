@@ -12,7 +12,7 @@ import multiprocessing as mp
 
 import plumbum as pb
 
-PY2 = sys.version_info.major == 2
+PY2 = sys.version_info[0] == 2
 
 iteritems = (lambda d: d.iteritems()) if PY2 else (lambda d: d.items())
 
