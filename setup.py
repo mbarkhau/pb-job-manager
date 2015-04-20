@@ -12,7 +12,7 @@ setup(
     name='pb_job_manager',
     version=__version__,
     description='A utility class to run plumbum commands in parallel',
-    long_description=read('README.md'),
+    long_description=read('README.rst'),
     author='Manuel Barkhau',
     author_email='mbarkhau@gmail.com',
     url='https://github.com/mbarkhau/pb-job-manager/',
