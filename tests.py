@@ -1,12 +1,17 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import sys
 import time
 import pytest
 
 import plumbum as pb
 
 from pb_job_manager import PBJobManager
+
+PY2 = sys.version_info[0] == 2
+
+iteritems = (lambda d: d.iteritems()) if PY2 else (lambda d: d.items())
 
 
 @pytest.fixture
@@ -35,17 +40,33 @@ def test_dependant_jobs(manager, tmpdir):
     assert manager[job_id].stdout.startswith("100 ")
 
 
-# def test_job_cb_chaining(manager):
-#     def child_cb():
-#         parent_id = manager._deps[child_id]
-#         return [
-#             pb.cmd.head["-c", ord(char_byte), "/dev/urandom"]
-#             for char_byte in manager[parent_id].stdout
-#         ]
+def test_job_cb_chaining(manager, tmpdir):
+    tmp_fn = tmpdir.join("job_cb_chaining.dat")
+    parent_results = []
 
-#     def parent_cb():
-#         return [pb.cmd.head["-c", "10", "/dev/urandom"], child_cb]
+    def child_cb():
+        assert len(manager._done) == 1
 
-#     child_id = manager.add_job(parent_cb)
-#     manager.run()
-#     assert len(manager._done) == 11
+        job_id, parent_future = next(iteritems(manager._done))
+        parent_results.extend((int(char, 16) for char in "".join(
+            parent_future.stdout.split()[1:-1]
+        )))
+
+        return [
+            pb.cmd.echo["0" * n] >> tmp_fn.strpath
+            for n in parent_results
+        ]
+
+    def parent_cb():
+        return [(
+            pb.cmd.head["-c", "4", "/dev/urandom"]
+            | pb.cmd.hexdump
+        ), child_cb]
+
+    manager.add_job(parent_cb)
+    manager.run()
+
+    assert len(manager._done) == 9
+    with tmp_fn.open() as fh:
+        data = fh.read().replace("\n", "").strip()
+        assert len(data) == sum(parent_results)

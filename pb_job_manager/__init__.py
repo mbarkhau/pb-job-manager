@@ -2,7 +2,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 import os
 import sys
@@ -27,7 +27,6 @@ class PBJobManager(object):
         self.max_procs = max(1, int(max_procs))
 
         self._jobs = {}
-        self._cb_queue = {}
 
         # Since job_ids are handed out linearly by the manager,
         # we can safely assume that there are no circular dependencies
