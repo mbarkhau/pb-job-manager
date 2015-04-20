@@ -2,7 +2,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 import os
 import sys
@@ -84,6 +84,9 @@ class PBJobManager(object):
             # but we're finished iterating by now, so :P
             del self._futures[job_id]
             self._done[job_id] = job_future
+            # poll says we are done, but we still need to call wait()
+            # so that file handles of popen get closed
+            job_future.wait()
             return
 
     def _wait_on_running(self, max_procs):

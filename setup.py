@@ -19,7 +19,7 @@ setup(
     license="BSD License",
     packages=['pb_job_manager'],
     install_requires=['plumbum>=1.4'],
-    extras_require={'dev': ["pytest"]},
+    extras_require={'dev': ["pytest", "wheel"]},
     keywords="plumbum, shell, popen, process, subprocess, multiprocess",
     classifiers=[
         'Development Status :: 4 - Beta',
