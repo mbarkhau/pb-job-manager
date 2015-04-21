@@ -7,5 +7,7 @@ python:
   - "3.4"
   - "pypy"
   - "pypy3"
+install:
+  - "pip install ."
 # command to run tests
 script: "python tests.py"
