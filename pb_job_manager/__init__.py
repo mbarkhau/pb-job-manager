@@ -10,8 +10,6 @@ import time
 import binascii
 import multiprocessing as mp
 
-import plumbum as pb
-
 PY2 = sys.version_info[0] == 2
 
 iteritems = (lambda d: d.iteritems()) if PY2 else (lambda d: d.items())
@@ -36,6 +34,8 @@ class PBJobManager(object):
         self._done = {}
 
         self._poll_interval = DEFAULT_POLL_INTERVAL
+        import plumbum
+        self.pb = plumbum
 
     def mk_job_id(self):
         return binascii.hexlify(os.urandom(8)).decode('ascii')
@@ -61,7 +61,7 @@ class PBJobManager(object):
                 # wait for dep job to finish
                 continue
 
-            if isinstance(job, pb.commands.base.BaseCommand):
+            if isinstance(job, self.pb.commands.base.BaseCommand):
                 return job_id
 
             # TODO: see if this breaks with remote commands
@@ -121,7 +121,7 @@ class PBJobManager(object):
             print("starting", job_id)
 
         job = self._jobs.pop(job_id)
-        job_future = job & pb.BG
+        job_future = job & self.pb.BG
         self._futures[job_id] = job_future
         return job_id
 
