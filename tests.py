@@ -70,3 +70,7 @@ def test_job_cb_chaining(manager, tmpdir):
     with tmp_fn.open() as fh:
         data = fh.read().replace("\n", "").strip()
         assert len(data) == sum(parent_results)
+
+# TODO: test that would provoke IOError 24 Too many file handles, if we
+# weren't cleaning up processes properly
+
