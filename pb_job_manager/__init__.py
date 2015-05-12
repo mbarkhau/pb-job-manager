@@ -16,6 +16,7 @@ iteritems = (lambda d: d.iteritems()) if PY2 else (lambda d: d.items())
 
 DEFAULT_MAX_PROCS = mp.cpu_count()
 DEFAULT_POLL_INTERVAL = 0.001
+MAX_POLL_INTERVAL = 3
 
 
 class PBJobManager(object):
@@ -89,6 +90,12 @@ class PBJobManager(object):
             job_future.wait()
             return
 
+    def _increase_poll_interval(self):
+        self._poll_interval = min(
+            2 * self._poll_interval,
+            MAX_POLL_INTERVAL
+        )
+
     def _wait_on_running(self, max_procs):
         assert max_procs >= 0
 
@@ -100,14 +107,14 @@ class PBJobManager(object):
             next_job_id = self._get_next_job()
             if self._jobs and next_job_id is None:
                 time.sleep(self._poll_interval)
-                self._poll_interval *= 2
+                self._increase_poll_interval()
                 continue
 
             if len(self._futures) <= max_procs:
                 return
 
             time.sleep(self._poll_interval)
-            self._poll_interval *= 2
+            self._increase_poll_interval()
 
     def dispatch(self):
         self._wait_on_running(self.max_procs)
