@@ -2,7 +2,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
 import os
 import sys
@@ -21,8 +21,13 @@ MAX_POLL_INTERVAL = 3
 
 class PBJobManager(object):
 
-    def __init__(self, max_procs=DEFAULT_MAX_PROCS, verbose=False):
+    def __init__(
+            self,
+            max_procs=DEFAULT_MAX_PROCS,
+            verbose=False,
+            job_timeout=None):
         self._verbose = verbose
+        self._job_timeout = job_timeout
         self.max_procs = max(1, int(max_procs))
 
         self._jobs = {}
@@ -31,10 +36,14 @@ class PBJobManager(object):
         # we can safely assume that there are no circular dependencies
         self._deps = {}
 
+        self._start_times = {}
         self._futures = {}
         self._done = {}
+        self._failed = {}
 
         self._poll_interval = DEFAULT_POLL_INTERVAL
+        # plumbum is imported here so we can to run
+        # setup.py without any dependencies
         import plumbum
         self.pb = plumbum
 
@@ -74,20 +83,39 @@ class PBJobManager(object):
     def _postproc_done_futures(self):
         for job_id, job_future in iteritems(self._futures):
             exit_code = job_future.proc.poll()
-            if exit_code is None:
-                # still running
+            timeout_exceeded = (
+                self._job_timeout and
+                (time.time() - self._start_times[job_id]) >= self._job_timeout
+            )
+            job_is_running = exit_code is None and not timeout_exceeded
+            if job_is_running:
                 continue
 
             if self._verbose:
-                print("finished", job_id)
+                if timeout_exceeded:
+                    print("aborting", job_id)
+                else:
+                    print("finished", job_id)
 
-            # Yeah, yeah, dangerous modification during iteration,
-            # but we're finished iterating by now, so :P
+            # Yeah, yeah, dangerous modification during iteration, but
+            # we're finished iterating by now and exit immediatly, so :P
             del self._futures[job_id]
             self._done[job_id] = job_future
-            # poll says we are done, but we still need to call wait()
+
+            if timeout_exceeded:
+                try:
+                    job_future.proc.kill()
+                except OSError:
+                    # job may have finshed after all
+                    pass
+
+            # poll may say we are done, but we still need to call wait()
             # so that file handles of popen get closed
-            job_future.wait()
+            try:
+                job_future.wait()
+            except (OSError, self.pb.ProcessExecutionError) as err:
+                self._failed[job_id] = (job_future, err)
+
             return
 
     def _increase_poll_interval(self):
@@ -129,6 +157,7 @@ class PBJobManager(object):
 
         job = self._jobs.pop(job_id)
         job_future = job & self.pb.BG
+        self._start_times[job_id] = time.time()
         self._futures[job_id] = job_future
         return job_id
 

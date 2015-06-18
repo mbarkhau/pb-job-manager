@@ -2,7 +2,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import sys
-import time
 import pytest
 
 import plumbum as pb
@@ -71,6 +70,17 @@ def test_job_cb_chaining(manager, tmpdir):
         data = fh.read().replace("\n", "").strip()
         assert len(data) == sum(parent_results)
 
+
+def test_timeout(manager, tmpdir):
+    manager._job_timeout = 0.2
+    job_id_1 = manager.add_job(pb.cmd.sleep[0.1])
+    job_id_2 = manager.add_job(pb.cmd.sleep[0.3])
+
+    manager.run()
+
+    assert job_id_1 not in manager._failed
+    assert job_id_2 in manager._failed
+
+
 # TODO: test that would provoke IOError 24 Too many file handles, if we
 # weren't cleaning up processes properly
-
