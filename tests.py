@@ -10,7 +10,10 @@ from pb_job_manager import PBJobManager
 
 PY2 = sys.version_info[0] == 2
 
-iteritems = (lambda d: d.iteritems()) if PY2 else (lambda d: d.items())
+if PY2:
+    iteritems = lambda d: d.iteritems()
+else:
+    iteritems = lambda d: iter(d.items())
 
 
 @pytest.fixture
