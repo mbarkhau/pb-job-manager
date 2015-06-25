@@ -12,7 +12,11 @@ import multiprocessing as mp
 
 PY2 = sys.version_info[0] == 2
 
-iteritems = (lambda d: d.iteritems()) if PY2 else (lambda d: d.items())
+if PY2:
+    iteritems = lambda d: d.iteritems()
+else:
+    iteritems = lambda d: iter(d.items())
+
 
 DEFAULT_MAX_PROCS = mp.cpu_count()
 DEFAULT_POLL_INTERVAL = 0.001
