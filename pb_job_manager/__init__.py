@@ -138,6 +138,8 @@ class PBJobManager(object):
 
             next_job_id = self._get_next_job()
             if self._jobs and next_job_id is None:
+                # there are more jobs,
+                # but they have unfinished dependencies
                 time.sleep(self._poll_interval)
                 self._increase_poll_interval()
                 continue
@@ -188,6 +190,7 @@ class PBJobManager(object):
 
             done_job_ids = set(self._done)
             unyielded_job_ids = done_job_ids.difference(yielded_job_ids)
+
             for job_id in unyielded_job_ids:
                 yield self._done[job_id]
             yielded_job_ids.update(unyielded_job_ids)
