@@ -180,8 +180,8 @@ class PBJobManager(object):
             if len(self._jobs) > 0:
                 self.dispatch()
 
-            if len(self._futures) > 0:
-                self._wait_on_running(self.max_procs)
+            self._postproc_done_futures()
+
             if len(self._futures) >= self.max_procs:
                 # wait until one is finished
                 self._wait_on_running(self.max_procs - 1)
