@@ -84,3 +84,33 @@ def test_timeout(manager, tmpdir):
 
 # TODO: test that would provoke IOError 24 Too many file handles, if we
 # weren't cleaning up processes properly
+
+def test_run_and_iter(manager):
+    manager.add_job(pb.cmd.echo["foo"])
+    manager.add_job(pb.cmd.echo["bar"])
+    manager.add_job(pb.cmd.echo["baz"])
+
+    results = [r.stdout.strip() for r in manager]
+    assert len(results) == 3
+    assert "foo" in results
+    assert "bar" in results
+    assert "baz" in results
+
+
+def test_run_and_iter_over_maxprocs(manager):
+    for i in range(10):
+        manager.add_job(pb.cmd.echo[str(i)])
+
+    results = [r.stdout.strip() for r in manager]
+    assert len(results) == 10
+    for i in range(10):
+        assert str(i) in results
+
+def test_update_during_iter(manager):
+    manager.add_job(pb.cmd.echo["0"])
+    for job_result in manager:
+        output = int(job_result.stdout.strip())
+        if output < 10:
+            manager.add_job(pb.cmd.echo[str(output + 1)])
+
+    assert output == 10

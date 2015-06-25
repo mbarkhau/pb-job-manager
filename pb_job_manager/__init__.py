@@ -2,7 +2,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 
 import os
 import sys
@@ -169,5 +169,32 @@ class PBJobManager(object):
             self.dispatch()
         self.wait()
 
+    def run_and_iter(self):
+        yielded_job_ids = set()
+
+        while True:
+            if len(self._jobs) > 0:
+                self.dispatch()
+
+            if len(self._futures) > 0:
+                self._wait_on_running(self.max_procs)
+
+            done_job_ids = set(self._done)
+            unyielded_job_ids = done_job_ids.difference(yielded_job_ids)
+            for job_id in unyielded_job_ids:
+                yield self._done[job_id]
+            yielded_job_ids.update(unyielded_job_ids)
+
+            unfinished_jobs = len(self._jobs) + len(self._futures)
+            if unfinished_jobs == 0 and len(unyielded_job_ids) == 0:
+                return
+
     def __getitem__(self, job_id):
         return self._done[job_id]
+
+    def __iter__(self):
+        """Iterates over the futures as they are finished.
+
+        Note: Ordering is not guaranteed.
+        """
+        return self.run_and_iter()
