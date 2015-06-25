@@ -11,7 +11,7 @@ def read(fname):
 setup(
     name='pb_job_manager',
     version=__version__,
-    description='A utility class to run plumbum commands in parallel',
+    description='A utility class to run plumbum commands concurrently',
     long_description=read('README.rst'),
     author='Manuel Barkhau',
     author_email='mbarkhau@gmail.com',
