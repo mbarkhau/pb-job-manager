@@ -129,7 +129,7 @@ class PBJobManager(object):
         )
 
     def _wait_on_running(self, max_procs):
-        assert max_procs >= 0
+        max_procs = max(max_procs, 0)
 
         self._poll_interval = DEFAULT_POLL_INTERVAL
         while True:
@@ -182,6 +182,9 @@ class PBJobManager(object):
 
             if len(self._futures) > 0:
                 self._wait_on_running(self.max_procs)
+            if len(self._futures) >= self.max_procs:
+                # wait until one is finished
+                self._wait_on_running(self.max_procs - 1)
 
             done_job_ids = set(self._done)
             unyielded_job_ids = done_job_ids.difference(yielded_job_ids)
