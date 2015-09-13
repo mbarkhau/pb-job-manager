@@ -8,6 +8,7 @@ import os
 import sys
 import time
 import binascii
+import collections
 import multiprocessing as mp
 
 PY2 = sys.version_info[0] == 2
@@ -34,7 +35,7 @@ class PBJobManager(object):
         self._job_timeout = job_timeout
         self.max_procs = max(1, int(max_procs))
 
-        self._jobs = {}
+        self._jobs = collections.OrderedDict()
 
         # Since job_ids are handed out linearly by the manager,
         # we can safely assume that there are no circular dependencies
