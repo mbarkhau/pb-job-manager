@@ -87,7 +87,6 @@ class PBJobManager(object):
             if callable(job):
                 del self._jobs[job_id]
                 self.add_job(job())
-                return self._get_next_job()
 
     def _postproc_done_futures(self):
         for job_id, job_future in iteritems(self._futures):
