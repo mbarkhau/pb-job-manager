@@ -63,9 +63,10 @@ class PBJobManager(object):
         if isinstance(job, list):
             subjob_iter = iter(job)
             job_id = self.add_job(next(subjob_iter))
+            dep_job_id = job_id
             for sub_job in subjob_iter:
-                # job_id of the last job is returned
-                job_id = self.add_job(sub_job, dep_job_id=job_id)
+                # job_id of the first job is returned
+                dep_job_id = self.add_job(sub_job, dep_job_id=dep_job_id)
         else:
             job_id = self.mk_job_id()
             if dep_job_id:

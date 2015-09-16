@@ -134,7 +134,10 @@ def test_job_fn(manager):
 
 def test_error_job(manager):
     def fn():
-        return [pb.cmd.echo | pb.cmd.grep["foo"]]
+        return [
+            (pb.cmd.echo | pb.cmd.grep["foo"]),
+            (pb.cmd.echo | pb.cmd.grep["bar"]),
+        ]
 
     manager.add_job(fn)
     manager.run()
