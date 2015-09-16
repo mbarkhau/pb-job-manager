@@ -81,8 +81,8 @@ class PBJobManager(object):
 
             # TODO: see if this breaks with remote commands
             if callable(job):
-                self.add_job(job())
                 del self._jobs[job_id]
+                self.add_job(job())
                 return self._get_next_job()
 
     def _postproc_done_futures(self):

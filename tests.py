@@ -118,3 +118,13 @@ def test_update_during_iter(manager):
             manager.add_job(pb.cmd.echo[str(output + 1)])
 
     assert output == 10
+
+
+def test_job_fn(manager):
+    def fn():
+        return [pb.cmd.echo["foo"], pb.cmd.echo["bar"]]
+
+    manager.add_job(fn)
+    results = [j.stdout.strip() for j in manager]
+
+    assert results == ["foo", "bar"]
