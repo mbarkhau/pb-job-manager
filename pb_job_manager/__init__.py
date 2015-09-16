@@ -35,6 +35,15 @@ class PBJobManager(object):
         self._job_timeout = job_timeout
         self.max_procs = max(1, int(max_procs))
 
+        self.clear()
+
+        self._poll_interval = DEFAULT_POLL_INTERVAL
+        # plumbum is imported here so we can to run
+        # setup.py without any dependencies
+        import plumbum
+        self.pb = plumbum
+
+    def clear(self):
         self._jobs = collections.OrderedDict()
 
         # Since job_ids are handed out linearly by the manager,
@@ -43,19 +52,14 @@ class PBJobManager(object):
 
         self._start_times = {}
         self._futures = {}
-        self._done = {}
+        self._done = collections.OrderedDict()
         self._failed = {}
-
-        self._poll_interval = DEFAULT_POLL_INTERVAL
-        # plumbum is imported here so we can to run
-        # setup.py without any dependencies
-        import plumbum
-        self.pb = plumbum
 
     def mk_job_id(self):
         return binascii.hexlify(os.urandom(8)).decode('ascii')
 
     def add_job(self, job, dep_job_id=None):
+        # list implies a serial dependency among the elements
         if isinstance(job, list):
             subjob_iter = iter(job)
             job_id = self.add_job(next(subjob_iter))
@@ -192,8 +196,9 @@ class PBJobManager(object):
             done_job_ids = set(self._done)
             unyielded_job_ids = done_job_ids.difference(yielded_job_ids)
 
-            for job_id in unyielded_job_ids:
-                yield self._done[job_id]
+            for job_id, job in iteritems(self._done):
+                if job_id in unyielded_job_ids:
+                    yield self._done[job_id]
             yielded_job_ids.update(unyielded_job_ids)
 
             unfinished_jobs = len(self._jobs) + len(self._futures)

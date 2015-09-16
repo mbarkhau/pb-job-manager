@@ -124,7 +124,17 @@ def test_job_fn(manager):
     def fn():
         return [pb.cmd.echo["foo"], pb.cmd.echo["bar"]]
 
-    manager.add_job(fn)
-    results = [j.stdout.strip() for j in manager]
+    for i in range(10):
+        manager.clear()
+        manager.add_job(fn)
+        results = [j.stdout.strip() for j in manager]
 
-    assert results == ["foo", "bar"]
+        assert results == ["foo", "bar"]
+
+
+def test_error_job(manager):
+    def fn():
+        return [pb.cmd.echo | pb.cmd.grep["foo"]]
+
+    manager.add_job(fn)
+    manager.run()
