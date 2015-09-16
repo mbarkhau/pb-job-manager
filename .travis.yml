@@ -7,6 +7,9 @@ python:
   - "pypy"
   - "pypy3"
 install:
+  - "pip install flake8"
   - "pip install ."
 # command to run tests
-script: "py.test tests.py"
+script:
+  - "flake8 ."
+  - "py.test tests.py"

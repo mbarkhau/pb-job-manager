@@ -109,6 +109,7 @@ def test_run_and_iter_over_maxprocs(manager):
     for i in range(10):
         assert str(i) in results
 
+
 def test_update_during_iter(manager):
     manager.add_job(pb.cmd.echo["0"])
     for job_result in manager:
