@@ -141,3 +141,4 @@ def test_error_job(manager):
 
     manager.add_job(fn)
     manager.run()
+    assert len(manager._failed) == 2

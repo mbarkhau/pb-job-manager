@@ -2,7 +2,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-__version__ = "0.1.9"
+__version__ = "0.2.1"
 
 import os
 import sys
@@ -91,17 +91,15 @@ class PBJobManager(object):
                 continue
 
             # TODO: see if this breaks with remote commands
-            if callable(job):
+            if not isinstance(job, self.pb.commands.base.BaseCommand):
                 del self._jobs[job_id]
                 self.add_job(job())
-                return
-            
+                return True
+
     def _get_next_job(self):
-        while self._jobs:
-            job_id = self._get_next_leaf_job()
-            if job_id:
-                return job_id
-            self._update_branch_jobs()
+
+        self._update_branch_jobs()
+        return self._get_next_leaf_job()
 
     def _postproc_done_futures(self):
         for job_id, job_future in iteritems(self._futures):
