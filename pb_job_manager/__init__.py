@@ -73,7 +73,7 @@ class PBJobManager(object):
             self._jobs[job_id] = job
         return job_id
 
-    def _get_next_job(self):
+    def _get_next_leaf_job(self):
         for job_id, job in iteritems(self._jobs):
             dep_job_id = self._deps.get(job_id)
             if dep_job_id and dep_job_id not in self._done:
@@ -83,10 +83,25 @@ class PBJobManager(object):
             if isinstance(job, self.pb.commands.base.BaseCommand):
                 return job_id
 
+    def _update_branch_jobs(self):
+        for job_id, job in iteritems(self._jobs):
+            dep_job_id = self._deps.get(job_id)
+            if dep_job_id and dep_job_id not in self._done:
+                # wait for dep job to finish
+                continue
+
             # TODO: see if this breaks with remote commands
             if callable(job):
                 del self._jobs[job_id]
                 self.add_job(job())
+                return
+            
+    def _get_next_job(self):
+        while self._jobs:
+            job_id = self._get_next_leaf_job()
+            if job_id:
+                return job_id
+            self._update_branch_jobs()
 
     def _postproc_done_futures(self):
         for job_id, job_future in iteritems(self._futures):
