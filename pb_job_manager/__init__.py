@@ -2,7 +2,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 import os
 import sys
@@ -97,7 +97,6 @@ class PBJobManager(object):
                 return True
 
     def _get_next_job(self):
-
         self._update_branch_jobs()
         return self._get_next_leaf_job()
 
